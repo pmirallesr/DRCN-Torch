@@ -1,4 +1,6 @@
 #Ignore following folders
-data/
+data/*
+data/*/
+!data/data_transforms.py
 logs/
 
