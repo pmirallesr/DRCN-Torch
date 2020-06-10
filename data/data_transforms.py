@@ -21,12 +21,14 @@ class GaussianDenoising(object):
         self.effect_type = effect_type
         if mean == 0:
             self.mean = means[effect_type]
+        else:
+            self.mean = mean
 
     def __call__(self, x):
         if self.effect_type == "multiplicative":
-            return x.numpy() * np.random.normal(loc=1.0, scale=self.sigma, size=x.shape)
+            return x * np.random.normal(loc=self.mean, scale=self.sigma, size=x.shape)
         elif self.effect_type == "additive":
-            return x.numpy() + np.random.normal(loc=0.0, scale=self.sigma, size=x.shape)
+            return x + np.random.normal(loc=self.mean, scale=self.sigma, size=x.shape)
         else:
             print("Specify a valid type of gaussian error: multiplicative or additive")
             raise ValueError

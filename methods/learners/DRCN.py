@@ -134,7 +134,7 @@ image_data_augment_transforms = []
 # Denoising
 tensor_data_augment_transforms = []
 # tensor_data_augment_transforms.append(ImpulseDenoising())
-# tensor_data_augment_transforms.append(GaussianDenoising(0.2, multiplicative))
+# tensor_data_augment_transforms.append(GaussianDenoising(0.2, "multiplicative"))
 
 
 MNIST_transforms = []
