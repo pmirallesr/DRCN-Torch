@@ -1,4 +1,9 @@
 # Models
+import torch.nn as nn
+import torch.nn.functional as F
+import torch
+import torchvision
+
 class Encoder(nn.Module):
     """Encoder common to Autoencoder and labeller"""
 

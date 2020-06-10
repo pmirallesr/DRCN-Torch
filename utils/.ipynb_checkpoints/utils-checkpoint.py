@@ -2,7 +2,6 @@ import numpy as np
 import torch
 import os
 import matplotlib.pyplot as plt
-import torch.nn as nn
 
 # Fix the random seeds
 def setSeeds(randomSeed):
@@ -44,10 +43,6 @@ def weights_init(m):
 def getLabellingAccuracy(dataLoader, model):
   correct = 0
   total = 0
-  if next(model.parameters()).is_cuda:
-      device = 'cuda'
-  else:
-      device = 'cpu'
   for batch_id, (data, target) in enumerate(dataLoader):
     data = data.to(device)
     target = target.to(device)
