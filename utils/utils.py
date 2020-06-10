@@ -1,77 +1,164 @@
+""" A bunch of utilities used throughout the repository """
 import numpy as np
 import torch
 import os
 import matplotlib.pyplot as plt
 import torch.nn as nn
+import random
+import math
 
 # Fix the random seeds
-def setSeeds(randomSeed):
-  """ Based on: https://medium.com/@ODSC/properly-setting-the-random-seed-in-ml-experiments-not-as-simple-as-you-might-imagine-219969c84752"""
-  np.random.seed(randomSeed)
-  torch.manual_seed(randomSeed)
-  os.environ['PYTHONASHSEED']=str(randomSeed)
-  #random.seed(randomSeed)
+def set_seeds(random_seed=random.randint(1, 100000)):
+    """
+    Based on:
+    http://tiny.cc/22umqz
+    Args
+        random_seed: The number to which the random seeds must be set
+    """
+    np.random.seed(random_seed)
+    torch.manual_seed(random_seed)
+    os.environ["PYTHONASHSEED"] = str(random_seed)
+    random.seed(random_seed)
+
 
 # functions to show an image
 def imshow(img):
+    """
+    Shows the given image
+    Args:
+        img: an image in torchvision.tensor form
+    """
     npimg = img.numpy()
-    plt.rcParams["figure.figsize"] = [16,9]    
+    plt.rcParams["figure.figsize"] = [16, 9]
     plt.imshow(np.transpose(npimg, (1, 2, 0)))
     plt.show()
-    
+
+
 # Some padding calculation tools.
 
-def calcConvSamePadding(input, convNet, nDim = 2):
-  """ Calculates padding required for convNet to produce output of same dimensions as input """
-  pad_h = math.ceil((convNet.kernel_size[0] - input.shape[2] * (1 - convNet.stride[0]) - convNet.stride[0]) / 2)
-  pad_w = math.ceil((convNet.kernel_size[1] - input.shape[3] * (1 - convNet.stride[1]) - convNet.stride[1]) / 2)
-  return (pad_h, pad_h, pad_w, pad_w)
 
-def calcPoolSamePadding(input, poolNet, nDim = 2): 
-  """ Calculates padding required for poolNet to produce output of same dimensions as input """
-  pad_h = math.ceil(((input.shape[2] - 1)*poolNet.stride[0] + 1 + poolNet.dilation*(poolNet.kernel_size[0] - 1) - input.shape[2])/2)
-  pad_w = math.ceil(((input.shape[3] - 1)*poolNet.stride[1] + 1 + poolNet.dilation*(poolNet.kernel_size[1] - 1) - input.shape[3])/2)
-  return (pad_h, pad_h, pad_w, pad_w)
+def calc_conv_same_padding(input, conv_net, n_dim=2):
+    """
+    Calculates padding required for conv_net to produce output of same dimensions as input
+    Args:
+       input: an example of the data that will be processed by the pooling layer, in torchivision.tensor form
+       conv_net: The layer for whom the padding is needed, with initialized stride, kernel, and dilation
+       n_dim: To Be Implemented for layers processing input other than 2-dimensional
+    """
+    pad_h = math.ceil(
+        (
+            conv_net.kernel_size[0]
+            - input.shape[2] * (1 - conv_net.stride[0])
+            - conv_net.stride[0]
+        )
+        / 2
+    )
+    pad_w = math.ceil(
+        (
+            conv_net.kernel_size[1]
+            - input.shape[3] * (1 - conv_net.stride[1])
+            - conv_net.stride[1]
+        )
+        / 2
+    )
+    return pad_h, pad_w
 
-# Custom init for conv weights
+
+def calc_pool_same_padding(input, pool_net, n_dim=2):
+    """
+    Calculates padding required for pool_net to produce output of same dimensions as input
+    Args:
+        input: an example of the data that will be processed by the pooling layer, in torchivision.tensor form
+        pool_net: The layer for whom the padding is needed, with initialized stride, kernel, and dilation
+        n_dim: To Be Implemented for layers processing input other than 2-dimensional
+    """
+    pad_h = math.ceil(
+        (
+            (input.shape[2] - 1) * pool_net.stride[0]
+            + 1
+            + pool_net.dilation * (pool_net.kernel_size[0] - 1)
+            - input.shape[2]
+        )
+        / 2
+    )
+    pad_w = math.ceil(
+        (
+            (input.shape[3] - 1) * pool_net.stride[1]
+            + 1
+            + pool_net.dilation * (pool_net.kernel_size[1] - 1)
+            - input.shape[3]
+        )
+        / 2
+    )
+    return pad_h, pad_h, pad_w, pad_w
+
+
+# Conv2d layer weight init
+
 
 def weights_init(m):
-      if isinstance(m, nn.Conv2d):
-          nn.init.xavier_uniform_(m.weight.data, gain=1)
-          nn.init.constant_(m.bias.data, 0.1)
+    """
+    Initialize the given layer with a xavier_uniform distribution for its input
+    weights and a uniform 0.1 for its biases
+    Args:
+        m: A pytorch model that is an instance of nn.Conv2d
+    """
+    if isinstance(m, nn.Conv2d):
+        nn.init.xavier_uniform_(m.weight.data, gain=1)
+        nn.init.constant_(m.bias.data, 0.1)
 
-# Evaluate a model wrt to a dataLoader. Assumes the model's output can be compared with the targets from data
-def getLabellingAccuracy(dataLoader, model):
-  correct = 0
-  total = 0
-  if next(model.parameters()).is_cuda:
-      device = 'cuda'
-  else:
-      device = 'cpu'
-  for batch_id, (data, target) in enumerate(dataLoader):
-    data = data.to(device)
-    target = target.to(device)
-    forward = model(data)
-    pred = torch.max(forward, 1).indices
-    total += target.size(0)
-    # print(total)
-    correct += (pred == target).sum().item()
-    # print(correct)
-  return(correct, total, correct/total*100)
 
-# Given a dictionary representing experimental settings, calculate the amount of total experiments
-def calcExperimentsAmount(experimentRanges):
-    totalExp = 1
-    for paramSet in experimentRanges.values():
-        totalExp *= len(paramSet)
-    return totalExp
+# Module evaluation
 
-# Create a string for naming a folder containing a set of experiments from the experimental ranges
-# String = Var1_Var2_Var3 essentially
-def create_zip_name(experimentRanges):
-    zipName = ""
-    for expVariable in experimentRanges.keys():
-        if(len(experimentRanges[expVariable]) > 1 ):
-            zipName += expVariable + "_"
-    return zipName[:-1]
-    
+
+def get_labelling_accuracy(data_loader, model):
+    """
+    Args:
+        data_loader: a pytorch Data_Loader object with the dataset the model must be evaluated against
+        model: a pytorch model inheriting from nn.Module
+    """
+    correct = 0
+    total = 0
+    if next(model.parameters()).is_cuda:
+        device = "cuda"
+    else:
+        device = "cpu"
+    for batch_id, (data, target) in enumerate(data_loader):
+        data = data.to(device)
+        target = target.to(device)
+        forward = model(data)
+        pred = torch.max(forward, 1).indices
+        total += target.size(0)
+        correct += (pred == target).sum().item()
+    return correct, total, correct / total * 100
+
+
+# Experiment management
+
+
+def calc_experiments_amount(experiment_ranges):
+    """
+    Returns the total experiments implied by the given experiment ranges. Total = product over all keys
+    of len(experiment_ranges[key])
+    Args:
+        experiment_ranges: A dictionary where keys = experiment variables and
+        values = values of those variables for a set of experiments
+    """
+    experiment_amount = 1
+    for parameter_set in experiment_ranges.values():
+        experiment_amount *= len(parameter_set)
+    return experiment_amount
+
+
+def create_exp_name(experiment_ranges):
+    """
+    Returns a string of the form "Var1_Var2_Var3" that describes the set of experiments
+    Args:
+        experiment_ranges: A dictionary where keys = experiment variables and
+        values = values of those variables for a set of experiments
+    """
+    exp_name = ""
+    for variable in experiment_ranges.keys():
+        if len(experiment_ranges[variable]) > 1:
+            exp_name += variable + "_"
+    return exp_name[:-1]
