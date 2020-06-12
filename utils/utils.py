@@ -6,6 +6,106 @@ import matplotlib.pyplot as plt
 import torch.nn as nn
 import random
 import math
+import torchvision
+
+
+def get_data_set(data_set_name, \
+                 split, \
+                 data_transforms = [torchvision.transforms.toTensor()], \
+                 target_transforms = [], \
+                 download = True, \
+                 data_path = "data/" \
+                 ):
+    '''
+    This function accepts the name of a dataset and some settings as a parameter
+    and outputs the demanded dataset.
+    Args:
+        data_set_name: Name of the dataset you want to load. Will throw an
+        exception if the name is not within valid_datasets
+
+        split: A string designating the kind of split you want. Currently only
+        supports test or train.
+
+        data_transforms: A set of transforms to be applied to the passed images. Should
+        at least include torchvision.transforms.toTensor()
+
+        download: Whether you'd like for the data to be downloaded on the local machine
+
+        data_path: Where to download the data, if you want it downloaded
+
+    Returns:
+        data_set: The pytorch dataset object designated by data_set_name,
+        loaded with the passed parameters.
+    Todo:
+        * Implement other datasets
+        * Handle the case where splits other than train or test are possible
+    '''
+
+    valid_datasets = ["MNIST, USPS, SVHN"]
+    if not data_set_name in valid_datasets:
+        print("Please enter a valid dataset! {}")
+        raise ValueError
+
+    if split == "Train":
+        if data_set_name == "MNIST":
+            data_set = torchvision.datasets.MNIST(
+                data_path + "MNIST/",
+                train=True,
+                download=download,
+                transform=data_transforms,
+                target_transform=target_transforms
+            )
+
+        elif data_set_name == "USPS":
+
+            data_set = torchvision.datasets.USPS(\
+                data_path + "USPS/", \
+                train=True, \
+                transform=data_transforms, \
+                target_transform=target_transforms, \
+                download=False
+            )
+        elif data_set_name == "SVHN":
+            data_set = torchvision.datasets.SVHN(
+                data_path + "SVHN/",
+                split="train",
+                download=True,
+                transform=data_transforms,
+                target_transform=target_transforms
+            )
+
+    elif split == "Test":
+
+        if data_set_name == "MNIST":
+            data_set = torchvision.datasets.MNIST(
+                data_path + "MNIST/",
+                train=False,
+                download=download,
+                transform=data_transforms,
+                target_transform=target_transforms
+            )
+
+        elif data_set_name == "USPS":
+            data_set = torchvision.datasets.USPS(\
+                data_path + "USPS/", \
+                train=False, \
+                transform=data_transforms, \
+                target_transform=target_transforms, \
+                download=False
+            )
+        elif data_set_name == "SVHN":
+            data_set = torchvision.datasets.SVHN(
+                data_path + "SVHN/",
+                split="test",
+                download=True,
+                transform=data_transforms,
+                target_transform=target_transforms
+            )
+    else:
+        print("Please enter a valid split, train or test!")
+        raise ValueError
+
+    return data_set
 
 # Fix the random seeds
 def set_seeds(random_seed=random.randint(1, 100000)):
