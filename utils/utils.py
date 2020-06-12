@@ -9,7 +9,7 @@ import math
 import torchvision
 
 
-def get_data_set(data_set_name, \
+def get_dataset(data_set_name, \
                  split, \
                  data_transforms = [torchvision.transforms.ToTensor()], \
                  target_transforms = [], \
