@@ -9,7 +9,7 @@ import math
 import torchvision
 
 
-def get_dataset(data_set_name, \
+def get_dataset(dataset_name, \
                  split, \
                  data_transforms = [torchvision.transforms.ToTensor()], \
                  target_transforms = [], \
@@ -20,7 +20,7 @@ def get_dataset(data_set_name, \
     This function accepts the name of a dataset and some settings as a parameter
     and outputs the demanded dataset.
     Args:
-        data_set_name: Name of the dataset you want to load. Will throw an
+        dataset_name: Name of the dataset you want to load. Will throw an
         exception if the name is not within valid_datasets
 
         split: A string designating the kind of split you want. Currently only
@@ -34,20 +34,20 @@ def get_dataset(data_set_name, \
         data_path: Where to download the data, if you want it downloaded
 
     Returns:
-        data_set: The pytorch dataset object designated by data_set_name,
+        data_set: The pytorch dataset object designated by dataset_name,
         loaded with the passed parameters.
     Todo:
         * Implement other datasets
         * Handle the case where splits other than train or test are possible
     '''
 
-    valid_datasets = ["MNIST, USPS, SVHN"]
-    if not data_set_name in valid_datasets:
+    valid_datasets = ["MNIST", "USPS", "SVHN"]
+    if not dataset_name in valid_datasets:
         print("Please enter a valid dataset! {}")
         raise ValueError
 
     if split == "Train":
-        if data_set_name == "MNIST":
+        if dataset_name == "MNIST":
             data_set = torchvision.datasets.MNIST(
                 data_path + "MNIST/",
                 train=True,
@@ -56,7 +56,7 @@ def get_dataset(data_set_name, \
                 target_transform=target_transforms
             )
 
-        elif data_set_name == "USPS":
+        elif dataset_name == "USPS":
 
             data_set = torchvision.datasets.USPS(\
                 data_path + "USPS/", \
@@ -65,7 +65,7 @@ def get_dataset(data_set_name, \
                 target_transform=target_transforms, \
                 download=False
             )
-        elif data_set_name == "SVHN":
+        elif dataset_name == "SVHN":
             data_set = torchvision.datasets.SVHN(
                 data_path + "SVHN/",
                 split="train",
@@ -76,7 +76,7 @@ def get_dataset(data_set_name, \
 
     elif split == "Test":
 
-        if data_set_name == "MNIST":
+        if dataset_name == "MNIST":
             data_set = torchvision.datasets.MNIST(
                 data_path + "MNIST/",
                 train=False,
@@ -85,7 +85,7 @@ def get_dataset(data_set_name, \
                 target_transform=target_transforms
             )
 
-        elif data_set_name == "USPS":
+        elif dataset_name == "USPS":
             data_set = torchvision.datasets.USPS(\
                 data_path + "USPS/", \
                 train=False, \
@@ -93,7 +93,7 @@ def get_dataset(data_set_name, \
                 target_transform=target_transforms, \
                 download=False
             )
-        elif data_set_name == "SVHN":
+        elif dataset_name == "SVHN":
             data_set = torchvision.datasets.SVHN(
                 data_path + "SVHN/",
                 split="test",
