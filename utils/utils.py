@@ -11,7 +11,7 @@ import torchvision
 
 def get_data_set(data_set_name, \
                  split, \
-                 data_transforms = [torchvision.transforms.toTensor()], \
+                 data_transforms = [torchvision.transforms.ToTensor()], \
                  target_transforms = [], \
                  download = True, \
                  data_path = "data/" \
