@@ -12,7 +12,7 @@ import torchvision
 def get_dataset(dataset_name, \
                  split, \
                  data_transforms = [torchvision.transforms.ToTensor()], \
-                 target_transforms = [], \
+                 target_transforms = None, \
                  download = True, \
                  data_path = "data/" \
                  ):
@@ -46,7 +46,7 @@ def get_dataset(dataset_name, \
         print("Please enter a valid dataset! {}")
         raise ValueError
 
-    if split == "Train":
+    if split == "Train" or split == "train":
         if dataset_name == "MNIST":
             data_set = torchvision.datasets.MNIST(
                 data_path + "MNIST/",
@@ -74,7 +74,7 @@ def get_dataset(dataset_name, \
                 target_transform=target_transforms
             )
 
-    elif split == "Test":
+    elif split == "Test" or split == "test":
 
         if dataset_name == "MNIST":
             data_set = torchvision.datasets.MNIST(
