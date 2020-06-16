@@ -272,7 +272,7 @@ def calc_pool_same_padding(input_shape, pool_net, n_dim=2):
             (input_shape[2] - 1) * pool_net.stride[0]
             + 1
             + pool_net.dilation * (pool_net.kernel_size[0] - 1)
-            - input_shape.shape[2]
+            - input_shape[2]
         )
         / 2
     )
