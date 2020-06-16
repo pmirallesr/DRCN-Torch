@@ -15,6 +15,7 @@ class Encoder(nn.Module):
         """
         Args:
             input_shape: Shape of the inputs to be processed. Used for dimension calculations.
+            Must adhere to (_, channels, dim1, dim2...) format
             dropout_chance: Chance of dropout during normal passes
             dense_layer_neurons: Size of the fully connected layers
         """
@@ -39,7 +40,7 @@ class Encoder(nn.Module):
         fc5_output_dim = dense_layer_neurons
 
         # Convolutional Layers Size Calculations
-        conv1_input_channels = input_channels
+        conv1_input_channels = input_shape[1]
         conv2_input_channels = conv1_filters
         conv3_input_channels = conv2_filters
 
