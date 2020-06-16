@@ -4,7 +4,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 import torchvision
-from utils.utils import calc_conv_same_padding, calc_pool_same_padding, calc_conv_output_dimensions, calc_pool_output_dimensions
+from utils.utils import (
+    calc_conv_same_padding,
+    calc_pool_same_padding,
+    calc_conv_output_dimensions,
+    calc_pool_output_dimensions,
+)
 import numpy as np
 
 
@@ -51,7 +56,9 @@ class Encoder(nn.Module):
         conv1_output_shape = calc_conv_output_dimensions(input_shape, self.conv1)
 
         self.maxPool2D1 = nn.MaxPool2d(max_pool1_size)
-        pool1_output_shape = calc_pool_output_dimensions(conv1_output_shape, self.maxPool2D1)
+        pool1_output_shape = calc_pool_output_dimensions(
+            conv1_output_shape, self.maxPool2D1
+        )
 
         self.conv2 = nn.Conv2d(
             conv2_input_channels, conv2_filters, conv2_kernel_size, padding=2
@@ -59,18 +66,22 @@ class Encoder(nn.Module):
         conv2_output_shape = calc_conv_output_dimensions(pool1_output_shape, self.conv2)
 
         self.maxPool2D2 = nn.MaxPool2d(max_pool2_size)
-        pool2_output_shape = calc_pool_output_dimensions(conv2_output_shape, self.maxPool2D1)
+        pool2_output_shape = calc_pool_output_dimensions(
+            conv2_output_shape, self.maxPool2D1
+        )
 
         self.conv3 = nn.Conv2d(
             conv3_input_channels, conv3_filters, conv3_kernel_size, padding=1
         )
-        conv3_output_shape = calc_conv_output_dimensions(pool2_output_shape, self.conv3)
+        # Store it since it'll be used by the autoencoder as well
+        self.conv3_output_shape = calc_conv_output_dimensions(
+            pool2_output_shape, self.conv3
+        )
 
         # Set padding to same
         self.set_padding(input_shape)
 
-
-        fc4_input_dim = conv3_filters * np.prod(conv3_output_shape[2:])
+        fc4_input_dim = conv3_filters * np.prod(self.conv3_output_shape[2:])
         fc5_input_dim = fc4_output_dim
 
         # Fully connected Layers
@@ -107,6 +118,7 @@ class Encoder(nn.Module):
         self.conv1.padding = calc_conv_same_padding(input_shape, self.conv1)
         self.conv2.padding = calc_conv_same_padding(input_shape, self.conv2)
         self.conv3.padding = calc_conv_same_padding(input_shape, self.conv3)
+
 
 class Labeller(nn.Module):
     """ The labeller part of the network is constituted by
@@ -189,7 +201,15 @@ class Autoencoder(nn.Module):
         x = F.relu(self.fc6(x))
         x = F.relu(self.fc7(x))
 
-        x = torch.reshape(x, (x.shape[0], self.deconv8.in_channels, 8, 8))
+        x = torch.reshape(
+            x,
+            (
+                x.shape[0],
+                self.deconv8.in_channels,
+                self.encoder.conv3_output_shape[2],
+                self.encoder.conv3_output_shape[3],
+            ),
+        )
         x = F.relu(self.deconv8(x))
         x = F.relu(self.deconv9(x))
         x = self.upsample9(x)
