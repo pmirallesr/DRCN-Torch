@@ -4,14 +4,22 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 import torchvision
+from utils.utils import calc_conv_same_padding, calc_pool_same_padding, calc_conv_output_dimensions, calc_pool_output_dimensions
+import numpy as np
 
 
 class Encoder(nn.Module):
     """Encoder common to Autoencoder and labeller"""
 
-    def __init__(self, input_channels, dropout_chance=0.5, dense_layer_neurons=300):
-        """Initialize DomainRegressor."""
+    def __init__(self, input_shape, dropout_chance=0.5, dense_layer_neurons=300):
+        """
+        Args:
+            input_shape: Shape of the inputs to be processed. Used for dimension calculations.
+            dropout_chance: Chance of dropout during normal passes
+            dense_layer_neurons: Size of the fully connected layers
+        """
         super(Encoder, self).__init__()
+        self.input_shape = input_shape
 
         # Size Parameters
 
@@ -39,17 +47,29 @@ class Encoder(nn.Module):
         self.conv1 = nn.Conv2d(
             conv1_input_channels, conv1_filters, conv1_kernel_size, padding=2
         )
+        conv1_output_shape = calc_conv_output_dimensions(input_shape, self.conv1)
+
         self.maxPool2D1 = nn.MaxPool2d(max_pool1_size)
+        pool1_output_shape = calc_pool_output_dimensions(conv1_output_shape, self.maxPool2D1)
+
         self.conv2 = nn.Conv2d(
             conv2_input_channels, conv2_filters, conv2_kernel_size, padding=2
         )
+        conv2_output_shape = calc_conv_output_dimensions(pool1_output_shape, self.conv2)
+
         self.maxPool2D2 = nn.MaxPool2d(max_pool2_size)
+        pool2_output_shape = calc_pool_output_dimensions(conv2_output_shape, self.maxPool2D1)
+
         self.conv3 = nn.Conv2d(
             conv3_input_channels, conv3_filters, conv3_kernel_size, padding=1
         )
+        conv3_output_shape = calc_conv_output_dimensions(pool2_output_shape, self.conv3)
 
-        # 8 is the final h x w dimension of the tensors when passed to the dense layer
-        fc4_input_dim = conv3_filters * 8 * 8
+        # Set padding to same
+        self.set_padding(input_shape)
+
+
+        fc4_input_dim = conv3_filters * np.prod(conv3_output_shape[2:])
         fc5_input_dim = fc4_output_dim
 
         # Fully connected Layers
@@ -75,6 +95,19 @@ class Encoder(nn.Module):
         x = self.dropout5(x)
         return x
 
+    def set_padding(self, input_shape):
+        """
+        Given an example input, set the padding parameters so that output dimension
+        for convolutional and pooling layers = input dimension. This function must be called
+        each time the input type changes.
+        Args:
+                input_shape: An example of the input to be processed by this module.
+        """
+        self.conv1.padding = calc_conv_same_padding(input_shape, self.conv1)
+        self.maxPool2D1.padding = calc_pool_same_padding(input_shape, self.maxPool2D1)
+        self.conv2.padding = calc_conv_same_padding(input_shape, self.conv2)
+        self.maxPool2D2.padding = calc_pool_same_padding(input_shape, self.maxPool2D2)
+        self.conv3.padding = calc_conv_same_padding(input_shape, self.conv3)
 
 class Labeller(nn.Module):
     """ The labeller part of the network is constituted by
@@ -150,6 +183,7 @@ class Autoencoder(nn.Module):
             self.encoder.conv1.kernel_size,
             padding=2,
         )
+        self.set_padding(self.input_shape)
 
     def forward(self, x):
         x = self.encoder(x)
@@ -165,3 +199,16 @@ class Autoencoder(nn.Module):
         x = self.deconv11(x)
 
         return x
+    
+    def set_padding(self, input_shape):
+        """
+        Given an example input, set the padding parameters so that output dimension
+        for convolutional and pooling layers = input dimension. This function must be called
+        each time the input type changes.
+        Args:
+                input_shape: An example of the input to be processed by this module.
+        """
+        self.deconv8.padding = calc_conv_same_padding(input_shape, self.deconv8)
+        self.deconv9.padding = calc_conv_same_padding(input_shape, self.deconv9)
+        self.deconv10.padding = calc_conv_same_padding(input_shape, self.deconv10)
+        self.deconv11.padding = calc_conv_same_padding(input_shape, self.deconv11)

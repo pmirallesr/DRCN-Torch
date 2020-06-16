@@ -9,14 +9,15 @@ import math
 import torchvision
 
 
-def get_dataset(dataset_name, \
-                 split, \
-                 data_transforms = [torchvision.transforms.ToTensor()], \
-                 target_transforms = None, \
-                 download = True, \
-                 data_path = "data/" \
-                 ):
-    '''
+def get_dataset(
+    dataset_name,
+    split,
+    data_transforms=[torchvision.transforms.ToTensor()],
+    target_transforms=None,
+    download=True,
+    data_path="data/",
+):
+    """
     This function accepts the name of a dataset and some settings as a parameter
     and outputs the demanded dataset.
     Args:
@@ -39,7 +40,7 @@ def get_dataset(dataset_name, \
     Todo:
         * Implement other datasets
         * Handle the case where splits other than train or test are possible
-    '''
+    """
 
     valid_datasets = ["MNIST", "USPS", "SVHN"]
     if not dataset_name in valid_datasets:
@@ -53,17 +54,17 @@ def get_dataset(dataset_name, \
                 train=True,
                 download=download,
                 transform=data_transforms,
-                target_transform=target_transforms
+                target_transform=target_transforms,
             )
 
         elif dataset_name == "USPS":
 
-            data_set = torchvision.datasets.USPS(\
-                data_path + "USPS/", \
-                train=True, \
-                transform=data_transforms, \
-                target_transform=target_transforms, \
-                download=download
+            data_set = torchvision.datasets.USPS(
+                data_path + "USPS/",
+                train=True,
+                transform=data_transforms,
+                target_transform=target_transforms,
+                download=download,
             )
         elif dataset_name == "SVHN":
             data_set = torchvision.datasets.SVHN(
@@ -71,7 +72,7 @@ def get_dataset(dataset_name, \
                 split="train",
                 download=download,
                 transform=data_transforms,
-                target_transform=target_transforms
+                target_transform=target_transforms,
             )
 
     elif split == "Test" or split == "test":
@@ -82,16 +83,16 @@ def get_dataset(dataset_name, \
                 train=False,
                 download=download,
                 transform=data_transforms,
-                target_transform=target_transforms
+                target_transform=target_transforms,
             )
 
         elif dataset_name == "USPS":
-            data_set = torchvision.datasets.USPS(\
-                data_path + "USPS/", \
-                train=False, \
-                transform=data_transforms, \
-                target_transform=target_transforms, \
-                download=download
+            data_set = torchvision.datasets.USPS(
+                data_path + "USPS/",
+                train=False,
+                transform=data_transforms,
+                target_transform=target_transforms,
+                download=download,
             )
         elif dataset_name == "SVHN":
             data_set = torchvision.datasets.SVHN(
@@ -99,13 +100,14 @@ def get_dataset(dataset_name, \
                 split="test",
                 download=download,
                 transform=data_transforms,
-                target_transform=target_transforms
+                target_transform=target_transforms,
             )
     else:
         print("Please enter a valid split, train or test!")
         raise ValueError
 
     return data_set
+
 
 # Fix the random seeds
 def set_seeds(random_seed=random.randint(1, 100000)):
@@ -134,21 +136,95 @@ def imshow(img):
     plt.show()
 
 
+# Some dimension calculation tools
+
+value_error_msg = "Make sure that the attributes of {} are correct"
+
+def calc_conv_output_dimensions(input_shape, conv_layer):
+    """
+    Calculates the output dimensions from a conv_layer layer with the given parameters
+    Args:
+        input_shape: The shape of the elements that the layer will be processing
+        conv_layer: The pooling layer for whom the output dimensions are needed
+    Returns:
+        dim: An n-dimensional tuple containing the output dimensions of the conv layer
+    """
+    assert len(input_shape[2:]) > 0
+    variables = [conv_layer.kernel_size, conv_layer.dilation, conv_layer.padding, conv_layer.stride]
+    n_dim = len(input_shape[2:])
+    # Verify correctness of variables
+    for i, elem in enumerate(variables):
+        if isinstance(elem, int):
+            variables[i] = (elem, elem)
+        elif isinstance(elem, tuple):
+            if not len(elem) == n_dim:
+                print(value_error_msg.format(conv_layer))
+                raise ValueError
+        else:
+            print(value_error_msg.format(conv_layer))
+            raise ValueError
+    # Init output and calculate
+    dim = (dim[0], dim[1])
+    for i in range(n_dim):
+        dim_x = math.floor(
+            (
+                input_shape[i+2]
+                + 2 * variables[2][i]
+                - variables[1][i] * (variables[0][i] - 1)
+                - 1
+            )
+            / variables[3][i]
+            + 1
+        )
+        # Append to tuple
+        dim += (dim_x,)
+    return dim
+
+
+def calc_pool_output_dimensions(input_shape, pool_layer):
+    """
+    Calculates the output dimensions from a pool_layer layer with the given parameters
+    Args:
+        input_shape: The shape of the elements that the layer will be processing
+        pool_layer: The pool_layer layer for whom the output dimensions are needed
+    """
+    assert len(input_shape[2:]) > 0
+    variables = [pool_layer.kernel_size, pool_layer.dilation, pool_layer.padding, pool_layer.stride]
+    n_dim = len(input_shape[2:])
+    # Verify correctness of variables
+    for i, elem in enumerate(variables):
+        if isinstance(elem, int):
+            variables[i] = (elem, elem)
+        elif isinstance(elem, tuple):
+            if not len(elem) == ndim:
+                print(value_error_msg.format(pool_layer))
+                raise ValueError
+        else:
+            print(value_error_msg.format(pool_layer))
+            raise ValueError
+    # Init output and calculate
+    dim = (dim[0], dim[1])
+    for i in range(n_dim):
+        dim_x = ((input_shape[i+2] + 2 * variables[2][i] - variables[1][i] * (variables[0][i] - 1) - 1) / variables[3][i]) + 1
+        dim += (dim_x,)
+    return dim
+
+
 # Some padding calculation tools.
 
 
-def calc_conv_same_padding(input, conv_net, n_dim=2):
+def calc_conv_same_padding(input_shape, conv_net, n_dim=2):
     """
-    Calculates padding required for conv_net to produce output of same dimensions as input
+    Calculates padding required for conv_net to produce output of same dimensions as input_shape
     Args:
-       input: an example of the data that will be processed by the pooling layer, in torchivision.tensor form
+       input_shape: an example of the data that will be processed by the pooling layer, in torchivision.tensor form
        conv_net: The layer for whom the padding is needed, with initialized stride, kernel, and dilation
-       n_dim: To Be Implemented for layers processing input other than 2-dimensional
+       n_dim: To Be Implemented for layers processing input_shape other than 2-dimensional
     """
     pad_h = math.ceil(
         (
             conv_net.kernel_size[0]
-            - input.shape[2] * (1 - conv_net.stride[0])
+            - input_shape[2] * (1 - conv_net.stride[0])
             - conv_net.stride[0]
         )
         / 2
@@ -156,7 +232,7 @@ def calc_conv_same_padding(input, conv_net, n_dim=2):
     pad_w = math.ceil(
         (
             conv_net.kernel_size[1]
-            - input.shape[3] * (1 - conv_net.stride[1])
+            - input_shape[3] * (1 - conv_net.stride[1])
             - conv_net.stride[1]
         )
         / 2
@@ -164,29 +240,29 @@ def calc_conv_same_padding(input, conv_net, n_dim=2):
     return pad_h, pad_w
 
 
-def calc_pool_same_padding(input, pool_net, n_dim=2):
+def calc_pool_same_padding(input_shape, pool_net, n_dim=2):
     """
-    Calculates padding required for pool_net to produce output of same dimensions as input
+    Calculates padding required for pool_net to produce output of same dimensions as input_shape
     Args:
-        input: an example of the data that will be processed by the pooling layer, in torchivision.tensor form
+        input_shape: an example of the data that will be processed by the pooling layer, in torchivision.tensor form
         pool_net: The layer for whom the padding is needed, with initialized stride, kernel, and dilation
-        n_dim: To Be Implemented for layers processing input other than 2-dimensional
+        n_dim: To Be Implemented for layers processing input_shape other than 2-dimensional
     """
     pad_h = math.ceil(
         (
-            (input.shape[2] - 1) * pool_net.stride[0]
+            (input_shape[2] - 1) * pool_net.stride[0]
             + 1
             + pool_net.dilation * (pool_net.kernel_size[0] - 1)
-            - input.shape[2]
+            - input_shape.shape[2]
         )
         / 2
     )
     pad_w = math.ceil(
         (
-            (input.shape[3] - 1) * pool_net.stride[1]
+            (input_shape[3] - 1) * pool_net.stride[1]
             + 1
             + pool_net.dilation * (pool_net.kernel_size[1] - 1)
-            - input.shape[3]
+            - input_shape[3]
         )
         / 2
     )
