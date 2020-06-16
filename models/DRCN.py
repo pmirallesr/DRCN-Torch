@@ -105,9 +105,7 @@ class Encoder(nn.Module):
                 input_shape: An example of the input to be processed by this module.
         """
         self.conv1.padding = calc_conv_same_padding(input_shape, self.conv1)
-        self.maxPool2D1.padding = calc_pool_same_padding(input_shape, self.maxPool2D1)
         self.conv2.padding = calc_conv_same_padding(input_shape, self.conv2)
-        self.maxPool2D2.padding = calc_pool_same_padding(input_shape, self.maxPool2D2)
         self.conv3.padding = calc_conv_same_padding(input_shape, self.conv3)
 
 class Labeller(nn.Module):
