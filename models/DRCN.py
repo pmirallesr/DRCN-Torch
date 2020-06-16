@@ -184,7 +184,7 @@ class Autoencoder(nn.Module):
             self.encoder.conv1.kernel_size,
             padding=2,
         )
-        self.set_padding(self.input_shape)
+        self.set_padding(self.encoder.input_shape)
 
     def forward(self, x):
         x = self.encoder(x)
