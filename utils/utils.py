@@ -164,7 +164,7 @@ def calc_conv_output_dimensions(input_shape, conv_layer):
             print(value_error_msg.format(conv_layer))
             raise ValueError
     # Init output and calculate
-    dim = (dim[0], dim[1])
+    dim = (input_shape[0], input_shape[1])
     for i in range(n_dim):
         dim_x = math.floor(
             (
@@ -203,7 +203,7 @@ def calc_pool_output_dimensions(input_shape, pool_layer):
             print(value_error_msg.format(pool_layer))
             raise ValueError
     # Init output and calculate
-    dim = (dim[0], dim[1])
+    dim = (input_shape[0], input_shape[1])
     for i in range(n_dim):
         dim_x = ((input_shape[i+2] + 2 * variables[2][i] - variables[1][i] * (variables[0][i] - 1) - 1) / variables[3][i]) + 1
         dim += (dim_x,)
