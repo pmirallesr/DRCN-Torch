@@ -63,13 +63,13 @@ def get_dataset(dataset_name, \
                 train=True, \
                 transform=data_transforms, \
                 target_transform=target_transforms, \
-                download=False
+                download=download
             )
         elif dataset_name == "SVHN":
             data_set = torchvision.datasets.SVHN(
                 data_path + "SVHN/",
                 split="train",
-                download=True,
+                download=download,
                 transform=data_transforms,
                 target_transform=target_transforms
             )
@@ -91,13 +91,13 @@ def get_dataset(dataset_name, \
                 train=False, \
                 transform=data_transforms, \
                 target_transform=target_transforms, \
-                download=False
+                download=download
             )
         elif dataset_name == "SVHN":
             data_set = torchvision.datasets.SVHN(
                 data_path + "SVHN/",
                 split="test",
-                download=True,
+                download=download,
                 transform=data_transforms,
                 target_transform=target_transforms
             )
