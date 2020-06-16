@@ -140,6 +140,7 @@ def imshow(img):
 
 value_error_msg = "Make sure that the attributes of {} are correct"
 
+
 def calc_conv_output_dimensions(input_shape, conv_layer):
     """
     Calculates the output dimensions from a conv_layer layer with the given parameters
@@ -150,7 +151,12 @@ def calc_conv_output_dimensions(input_shape, conv_layer):
         dim: An n-dimensional tuple containing the output dimensions of the conv layer
     """
     assert len(input_shape[2:]) > 0
-    variables = [conv_layer.kernel_size, conv_layer.dilation, conv_layer.padding, conv_layer.stride]
+    variables = [
+        conv_layer.kernel_size,
+        conv_layer.dilation,
+        conv_layer.padding,
+        conv_layer.stride,
+    ]
     n_dim = len(input_shape[2:])
     # Verify correctness of variables
     for i, elem in enumerate(variables):
@@ -168,7 +174,7 @@ def calc_conv_output_dimensions(input_shape, conv_layer):
     for i in range(n_dim):
         dim_x = math.floor(
             (
-                input_shape[i+2]
+                input_shape[i + 2]
                 + 2 * variables[2][i]
                 - variables[1][i] * (variables[0][i] - 1)
                 - 1
@@ -189,14 +195,19 @@ def calc_pool_output_dimensions(input_shape, pool_layer):
         pool_layer: The pool_layer layer for whom the output dimensions are needed
     """
     assert len(input_shape[2:]) > 0
-    variables = [pool_layer.kernel_size, pool_layer.dilation, pool_layer.padding, pool_layer.stride]
+    variables = [
+        pool_layer.kernel_size,
+        pool_layer.dilation,
+        pool_layer.padding,
+        pool_layer.stride,
+    ]
     n_dim = len(input_shape[2:])
     # Verify correctness of variables
     for i, elem in enumerate(variables):
         if isinstance(elem, int):
             variables[i] = (elem, elem)
         elif isinstance(elem, tuple):
-            if not len(elem) == ndim:
+            if not len(elem) == n_dim:
                 print(value_error_msg.format(pool_layer))
                 raise ValueError
         else:
@@ -205,7 +216,15 @@ def calc_pool_output_dimensions(input_shape, pool_layer):
     # Init output and calculate
     dim = (input_shape[0], input_shape[1])
     for i in range(n_dim):
-        dim_x = ((input_shape[i+2] + 2 * variables[2][i] - variables[1][i] * (variables[0][i] - 1) - 1) / variables[3][i]) + 1
+        dim_x = (
+            (
+                input_shape[i + 2]
+                + 2 * variables[2][i]
+                - variables[1][i] * (variables[0][i] - 1)
+                - 1
+            )
+            / variables[3][i]
+        ) + 1
         dim += (dim_x,)
     return dim
 
