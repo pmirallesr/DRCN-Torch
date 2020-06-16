@@ -285,7 +285,7 @@ def calc_pool_same_padding(input_shape, pool_net, n_dim=2):
         )
         / 2
     )
-    return pad_h, pad_h, pad_w, pad_w
+    return pad_h, pad_w
 
 
 # Conv2d layer weight init

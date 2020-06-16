@@ -200,7 +200,7 @@ class Autoencoder(nn.Module):
         x = self.deconv11(x)
 
         return x
-    
+
     def set_padding(self, input_shape):
         """
         Given an example input, set the padding parameters so that output dimension
